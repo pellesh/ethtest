@@ -1,2 +1,1 @@
-database postgres
-nmp ci
+docker-compose up
