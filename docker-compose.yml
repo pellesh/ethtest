@@ -1,0 +1,83 @@
+version: "3.7"
+services:
+  postgres:
+    image: postgres:bullseye
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    command: 
+      - "postgres"
+      - "-c"
+      - "max_connections=10"
+      - "-c"
+      - "shared_buffers=1GB"
+      - "-c"
+      - "random_page_cost=4"
+      - "-c"
+      - "shared_preload_libraries=pg_stat_statements"
+      - "-c"
+      - "pg_stat_statements.max=10000"
+      - "-c"
+      - "pg_stat_statements.track=all"
+      - "-c"
+      - "effective_cache_size=4GB"
+      - "-c"
+      - "work_mem=16MB"
+      - "-c"
+      - "maintenance_work_mem=512MB"
+    ports:
+      - 5432:5432
+    networks:
+      - postgres
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:6.14
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=vstarshinin@yandex.ru
+      - PGADMIN_DEFAULT_PASSWORD=postgres123
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin4/storage
+    ports:
+      - "5050:80"
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    networks:
+      - postgres
+
+
+  ethproject:
+    build: .
+    container_name: 'ethproject'
+    volumes:
+      - ./:/usr/src/server
+    ports:
+      - 3000:3000
+    networks:
+      - postgres
+    depends_on:
+      - postgres
+
+networks:
+  postgres:
+    driver: bridge
+
+
+volumes:
+  pgdata:
+    driver: local
+  pgadmin:
+    driver: local

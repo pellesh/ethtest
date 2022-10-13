@@ -1,0 +1,2 @@
+database postgres
+nmp ci
